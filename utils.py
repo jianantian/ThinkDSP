@@ -1,6 +1,7 @@
+import sys
+import warnings
 from functools import lru_cache
 from pathlib import Path
-import sys
 
 import numpy as np
 import pandas as pd
@@ -8,7 +9,7 @@ import torch
 from loguru import logger
 from scipy.io import wavfile
 from torch.utils import data
-import warnings
+
 warnings.simplefilter("error")
 
 
@@ -19,20 +20,20 @@ def audio_loader(filename, input_length: int):
     :param input_length:
     :return:
     """
-    _, data = wavfile.read(filename)
-    data = data.astype(np.int32)
-    amp = np.max(data) - np.min(data)
-    if len(data) > input_length:
-        max_index = len(data) - input_length
+    _, dt = wavfile.read(filename)
+    dt = dt.astype(np.int32)
+    amp = np.max(dt) - np.min(dt)
+    if len(dt) > input_length:
+        max_index = len(dt) - input_length
         offset = np.random.randint(max_index)
-        data = data[offset: input_length + offset]
-    elif len(data) < input_length:
-        total_pad = input_length - len(data)
+        dt = dt[offset: input_length + offset]
+    elif len(dt) < input_length:
+        total_pad = input_length - len(dt)
         head_pad = np.random.randint(total_pad)
         tail_pad = total_pad - head_pad
-        data = np.pad(data, (head_pad, tail_pad), 'constant')
-    data = data.astype(dtype=np.float32) / amp - 0.5
-    return torch.from_numpy(data.copy()).float()
+        dt = np.pad(dt, (head_pad, tail_pad), 'constant')
+    dt = dt.astype(dtype=np.float32) / amp - 0.5
+    return torch.from_numpy(dt.copy()).float()
 
 
 def get_dataset_meta(filename):
@@ -59,16 +60,16 @@ def get_test_data(filename):
         logger.info(f'Reading from {res_filename}')
         return pd.read_csv(res_filename)
 
-    data = pd.read_csv(filename)
-    num_data = len(data)
+    dt = pd.read_csv(filename)
+    num_data = len(dt)
     num = num_data // 10
     test_bool = np.array([False] * num_data)
     index_array = np.arange(num_data)
     test_index = np.random.choice(index_array, num)
     test_bool[test_index] = True
-    data['test'] = test_bool
-    data.to_csv(res_filename)
-    return data
+    dt['test'] = test_bool
+    dt.to_csv(res_filename)
+    return dt
 
 
 class Dataset(data.Dataset):
@@ -80,7 +81,7 @@ class Dataset(data.Dataset):
                  root,
                  data_frame,
                  input_length,
-                 num_class, 
+                 num_class,
                  label_dct,
                  data_loader=audio_loader):
         """
@@ -121,6 +122,6 @@ class Dataset(data.Dataset):
         name = record.fname
         file_name = self.root / name
         label_name = record.label
-        data = self.data_loader(file_name, self.input_length)
+        dt = self.data_loader(file_name, self.input_length)
         label = self.label_dct[label_name]
-        return data, torch.tensor(label, dtype=torch.int64)
+        return dt, torch.tensor(label, dtype=torch.int64)
