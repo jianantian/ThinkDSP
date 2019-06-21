@@ -1,20 +1,15 @@
 import json
-import sys
 import time
-from collections import OrderedDict
 from collections import deque
 from pathlib import Path
 
-import numpy as np
 import torch
-import utils
-import visualize
 from loguru import logger
-from scipy.io import wavfile
-from sklearn.metrics import accuracy_score, f1_score
-from sklearn.model_selection import train_test_split
 from torch import nn, optim
 from torch.utils import data
+
+import utils
+import visualize
 
 logger.add('train_audionet.log', level='INFO', colorize=True, format="<green>{time}</green> <level>{message}</level>")
 
