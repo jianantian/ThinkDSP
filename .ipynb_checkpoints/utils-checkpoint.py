@@ -1,5 +1,6 @@
 from functools import lru_cache
 from pathlib import Path
+import sys
 
 import numpy as np
 import pandas as pd
@@ -9,6 +10,7 @@ from scipy.io import wavfile
 from torch.utils import data
 import warnings
 warnings.simplefilter("error")
+
 
 def audio_loader(filename, input_length: int):
     """
@@ -78,6 +80,7 @@ class Dataset(data.Dataset):
                  root,
                  data_frame,
                  input_length,
+                 num_class, 
                  label_dct,
                  data_loader=audio_loader):
         """
@@ -91,6 +94,7 @@ class Dataset(data.Dataset):
         self.root = Path(root)
         self.input_length = input_length
         self.__raw_data = data_frame
+        self.num_class = num_class
         self.label_dct = label_dct
         self.data_loader = data_loader
 
@@ -119,4 +123,4 @@ class Dataset(data.Dataset):
         label_name = record.label
         data = self.data_loader(file_name, self.input_length)
         label = self.label_dct[label_name]
-        return data, torch.tensor(label, dtype=torch.uint8)
+        return data, torch.tensor(label, dtype=torch.int64)

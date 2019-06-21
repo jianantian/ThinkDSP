@@ -1,0 +1,15 @@
+{
+    "root": "/data/FSDKaggle2018/FSDKaggle2018.audio_train",
+    "train_fname": "/data/FSDKaggle2018/FSDKaggle2018.meta/train_post_competition.csv",
+  "epoch": 100,
+  "batch_size": 64,
+  "input_length": 88200,
+  "save_interval": 100,
+  "val_interval": 1,
+  "log_interval": 1,
+  "lr": 0.01,
+  "lr_decay": 0.2,
+  "lr_decay_period": 0,
+  "lr_decay_epoch": "40, 120, 160, 240, 360, 600",
+  "wd": 0.0005
+}
