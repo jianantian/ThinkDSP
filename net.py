@@ -89,7 +89,7 @@ def get_block(index, in_channels, out_channels, kernel_size):
     """
     """
     model = NamedLayer(f'convolutional_{index}')
-    layer = nn.Sequential(nn.Conv1d(in_channels, out_channels, kernel_size=kernel_size, stride=1, padding=1),
+    layer = nn.Sequential(nn.Conv1d(in_channels, out_channels, kernel_size=kernel_size, stride=1, padding=1, bias=False),
                           nn.LeakyReLU(0.1),
                           nn.BatchNorm1d(out_channels),
                           nn.MaxPool1d(kernel_size))
