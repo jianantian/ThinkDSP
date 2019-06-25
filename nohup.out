@@ -1,0 +1,52 @@
+Traceback (most recent call last):
+  File "net.py", line 14, in <module>
+    from sklearn.metrics import accuracy_score, f1_score
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/sklearn/__init__.py", line 76, in <module>
+    from .base import clone
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/sklearn/base.py", line 16, in <module>
+    from .utils import _IS_32BIT
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/sklearn/utils/__init__.py", line 15, in <module>
+    from .murmurhash import murmurhash3_32
+  File "__init__.pxd", line 918, in init sklearn.utils.murmurhash
+RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility. Expected 192 from C header, got 216 from PyObject
+Traceback (most recent call last):
+  File "net.py", line 14, in <module>
+    from sklearn.metrics import accuracy_score, f1_score
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/sklearn/__init__.py", line 76, in <module>
+    from .base import clone
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/sklearn/base.py", line 16, in <module>
+    from .utils import _IS_32BIT
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/sklearn/utils/__init__.py", line 15, in <module>
+    from .murmurhash import murmurhash3_32
+  File "__init__.pxd", line 918, in init sklearn.utils.murmurhash
+RuntimeWarning: numpy.ufunc size changed, may indicate binary incompatibility. Expected 192 from C header, got 216 from PyObject
+2019-06-21 18:44:09.075 | INFO     | utils:get_test_data:60 - Reading from /data/FSDKaggle2018/FSDKaggle2018.meta/train_validate.csv
+WARNING:root:Setting up a new session...
+Traceback (most recent call last):
+  File "net.py", line 270, in <module>
+    prediction = net(train_data)
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/torch/nn/modules/module.py", line 493, in __call__
+    result = self.forward(*input, **kwargs)
+  File "net.py", line 194, in forward
+    x = self.convolution_layer(x)
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/torch/nn/modules/module.py", line 493, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/torch/nn/modules/container.py", line 92, in forward
+    input = module(input)
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/torch/nn/modules/module.py", line 493, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/torch/nn/modules/container.py", line 92, in forward
+    input = module(input)
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/torch/nn/modules/module.py", line 493, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/torch/nn/modules/container.py", line 92, in forward
+    input = module(input)
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/torch/nn/modules/module.py", line 493, in __call__
+    result = self.forward(*input, **kwargs)
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/torch/nn/modules/pooling.py", line 75, in forward
+    self.return_indices)
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/torch/_jit_internal.py", line 133, in fn
+    return if_false(*args, **kwargs)
+  File "/home/algorithm/miniconda3/envs/experiment/lib/python3.7/site-packages/torch/nn/functional.py", line 461, in _max_pool1d
+    input, kernel_size, stride, padding, dilation, ceil_mode)
+RuntimeError: CUDA out of memory. Tried to allocate 412.00 MiB (GPU 0; 11.91 GiB total capacity; 3.83 GiB already allocated; 8.94 MiB free; 2.45 MiB cached)

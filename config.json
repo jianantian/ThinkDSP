@@ -3,7 +3,7 @@
     "train_fname": "/data/FSDKaggle2018/FSDKaggle2018.meta/train_post_competition.csv",
   "epoch": 100,
   "batch_size": 64,
-  "input_length": 88200,
+  "input_length": 59049,
   "save_interval": 100,
   "val_interval": 1,
   "log_interval": 1,
