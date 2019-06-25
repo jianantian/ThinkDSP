@@ -89,10 +89,11 @@ def get_block(index, in_channels, out_channels, kernel_size):
     """
     """
     model = NamedLayer(f'convolutional_{index}')
-    layer = nn.Sequential(nn.Conv1d(in_channels, out_channels, kernel_size=kernel_size, stride=1, padding=1, bias=False),
-                          nn.LeakyReLU(0.1),
-                          nn.BatchNorm1d(out_channels),
-                          nn.MaxPool1d(kernel_size))
+    layer = nn.Sequential(
+        nn.Conv1d(in_channels, out_channels, kernel_size=kernel_size, stride=1, padding=1, bias=False),
+        nn.LeakyReLU(0.1),
+        nn.BatchNorm1d(out_channels),
+        nn.MaxPool1d(kernel_size))
     model.add_module(f'convolutional', layer)
     return model
 
@@ -103,8 +104,6 @@ def get_softmax_layer(in_channels, num_class):
     model = NamedLayer('softmax')
     linear_layer = nn.Linear(in_channels, num_class)
     model.add_module(f'linear', linear_layer)
-    softmax_layer = nn.Softmax(dim=1)
-    model.add_module(f'softmax', softmax_layer)
     return model
 
 
@@ -184,7 +183,6 @@ class AudioNet(nn.Module):
 
         softmax_block = get_softmax_layer(512, self.num_class)
         # self.add_module('softmax_block', softmax_block)
-        self.softmax_layer = softmax_block
 
     def forward(self, x):
         """
