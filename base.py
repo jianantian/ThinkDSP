@@ -1,8 +1,87 @@
-from typing import Union
+from typing import Union, List, Tuple
 
 import torch
 from torch import nn
 from torch.utils import data
+import numpy as np
+import cv2
+
+
+def topk_along_axis(a: np.ndarray,
+                    kth: int,
+                    axis: int = -1,
+                    kind: str = 'introselect',
+                    order: Union[str, List[str]] = None,
+                    largest: bool = True,
+                    sort: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    沿坐标轴 axis 取前 kth 个值, 默认 (largest 为 True) 取最大的 kth 个
+    :param a:
+    :param kth:
+    :param axis:
+    :param kind:
+    :param order:
+    :param largest: True: 最大的 kth 个, False: 最小的 kth 个
+    :param sort: 输出是否排序
+    :return: 输出 idx, values
+    """
+    shape = a.shape
+    if not largest:
+        idx = np.argpartition(a, kth, axis=axis, kind=kind, order=order).take(range(0, kth), axis=axis)
+    else:
+        idx = np.argpartition(a, -kth, axis=axis, kind=kind, order=order).take(range(shape[axis] - kth, shape[axis]),
+                                                                               axis=axis)
+
+    if sort:
+        idx = np.take_along_axis(idx,
+                                 np.argsort(np.take_along_axis(a, idx, axis=axis), axis=axis),
+                                 axis=axis)
+        if largest:
+            idx = np.flip(idx, axis=axis)
+    return idx, np.take_along_axis(a, idx, axis=axis)
+
+
+def make_idx(idx: np.ndarray, axis: int) -> Tuple[int, ...]:
+    """
+    由 idx 得到索引 tuple
+    :param idx:
+    :param axis:
+    :return:
+    """
+    total_idx = np.ogrid[tuple(map(slice, idx.shape))]
+    total_idx[axis] = idx
+    return tuple(total_idx)
+
+
+def topk(a: np.ndarray,
+         kth: int,
+         kind: str = 'introselect',
+         order: Union[str, List[str]] = None,
+         largest: bool = True,
+         sort: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+    """
+    在 a 的所有项中取前 kth 项, 默认 (largest 为 True) 取最大的 kth 个
+    :param a:
+    :param kth:
+    :param kind:
+    :param order:
+    :param largest: True: 最大的 kth 个, False: 最小的 kth 个
+    :param sort: 输出是否排序
+    :return: 输出 idx, values
+    """
+    base_a = a.ravel()
+    if largest:
+        idx = np.argpartition(base_a, a.size - kth, kind=kind, order=order)[-kth:]
+    else:
+        idx = np.argpartition(base_a, kth, kind=kind, order=order)[:kth]
+
+    if sort:
+        idx = idx[np.argsort(base_a[idx])]
+        if largest:
+            idx = idx[::-1]
+    retrieval_idx = np.unravel_index(idx, a.shape)
+    idx = np.column_stack(retrieval_idx)
+    return idx, a[retrieval_idx]
 
 
 def get_data_statistics(train_dataset: data.Dataset, w: int, h: int):
@@ -46,6 +125,162 @@ def get_data_statistics(train_dataset: data.Dataset, w: int, h: int):
     data_mean = (r_mean.item(), g_mean.item(), b_mean.item())
     data_std = (r_std.item(), g_std.item(), b_std.item())
     return data_mean, data_std
+
+
+def _resize_img(original_img, input_size, fill_value=0):
+    """
+
+    :param original_img:
+    :param input_size:
+    :param fill_value:
+    :return:
+    """
+    img_h, img_w = original_img.shape[:2]
+    w, h = input_size
+    scale_rate = min(w / img_w, h / img_h)
+    new_w = int(img_w * scale_rate)
+    new_h = int(img_h * scale_rate)
+
+    original_img = cv2.resize(original_img, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
+    canvas = np.full((h, w, 3), fill_value=fill_value, dtype=np.uint8)
+    h_shift = (h - new_h) // 2
+    w_shift = (w - new_w) // 2
+    canvas[h_shift: h_shift + new_h, w_shift: w_shift + new_w, :] = original_img
+    return canvas
+
+
+def _rand_scale(scale):
+    """
+
+    :param scale:
+    :return:
+    """
+    scale = np.random.uniform(1, scale)
+    if np.random.randint(2) < 1:
+        return scale
+    else:
+        return 1. / scale
+
+
+def random_distort_image(image, hue: int = 15, saturation: float = 1.5, exposure: float = 1.5):
+    """
+    random change color
+    :param image:
+    :param hue:
+    :param saturation:
+    :param exposure:
+    :return:
+    """
+    # determine scale factors
+    hue_delta = np.random.uniform(-hue, hue)
+    saturation_delta = _rand_scale(saturation)
+    exposure_delta = _rand_scale(exposure)
+
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV).astype(np.float32)
+    hue_mat = image[:, :, 0]
+    sat_mat = image[:, :, 1]
+    exp_mat = image[:, :, 2]
+
+    hue_mat += hue_delta
+    hue_mat -= (hue_mat > 180) * 180
+    hue_mat += (hue_mat < 0) * 180
+
+    sat_mat *= saturation_delta
+    sat_mat[sat_mat > 255.] = 255.
+
+    exp_mat *= exposure_delta
+    exp_mat[exp_mat > 255.] = 255.
+
+    img_rgb = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_HSV2RGB)
+    return img_rgb
+
+
+def transform_gray(img):
+    """
+
+    :param img:
+    :return:
+    """
+    channel = np.random.randint(0, 4)
+    if channel > 2:
+        img_gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    else:
+        img_gray = img[:, :, channel]
+    return cv2.cvtColor(img_gray, cv2.COLOR_GRAY2RGB)
+
+
+def flip_image(img: np.ndarray, hflip: bool = False, vflip: bool = False):
+    """
+
+    :param img:
+    :param hflip:
+    :param vflip:
+    :return:
+    """
+    if hflip:
+        img = img[:, ::-1, :]
+    if vflip:
+        img = img[::-1, :, :]
+    return img
+
+
+def rotate_img(img, angle=90):
+    """
+
+    :param img:
+    :param angle:
+    :return:
+    """
+    h, w, _ = img.shape
+    mat = cv2.getRotationMatrix2D((w / 2, h / 2.), angle, 1)
+    return cv2.warpAffine(img, mat, (h, w))
+
+
+def transform_image(original_img, input_size, fill_value=255, new_axis=False, augmentation=True, dtype='float'):
+    """
+    transform img to torch.tensor of shape NCWH
+    :param original_img:
+    :param input_size:
+    :param fill_value:
+    :param new_axis: bool value, default False
+    :param augmentation:
+    :param dtype: data type to use: float, double, half
+    :return:
+    """
+    img = _resize_img(original_img, input_size, fill_value=fill_value)
+
+    if augmentation:
+        # random shift color
+        img = random_distort_image(img)
+
+        gray_random = np.random.rand()
+        if gray_random > 0.5:
+            img = transform_gray(img)
+
+        img = np.array(img / 255., dtype=np.float32)
+
+        hflip_random = np.random.rand()
+        vflip_random = np.random.rand()
+        hflip = np.all(hflip_random > 0.5)
+        vflip = np.all(vflip_random > 0.5)
+        img = flip_image(img, hflip=hflip, vflip=vflip)
+
+        rotate_random = np.random.rand()
+        rotate_bool = np.all(rotate_random > 0.5)
+        if rotate_bool:
+            img = rotate_img(img)
+        transform_dct = {'hflip': hflip,
+                         'vflip': vflip,
+                         'rotate': rotate_bool}
+    else:
+        img = np.array(img / 255., dtype=np.float32)
+        transform_dct = {'hflip': False,
+                         'vflip': False,
+                         'rotate': False}
+    img = np.einsum('ijk->kij', img)
+    if new_axis:
+        img = img[np.newaxis, ...]
+    return numpy2tensor(img, dtype=dtype), transform_dct
 
 
 def validate(net: nn.Module,
